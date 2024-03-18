@@ -10,6 +10,9 @@ from models.state import State
 from models.city import City
 from models.amenity import Amenity
 from models.review import Review
+import re
+from datetime import datetime
+import os
 
 
 class HBNBCommand(cmd.Cmd):
@@ -19,15 +22,15 @@ class HBNBCommand(cmd.Cmd):
     prompt = '(hbnb) ' if sys.__stdin__.isatty() else ''
 
     classes = {
-               'BaseModel': BaseModel, 'User': User, 'Place': Place,
-               'State': State, 'City': City, 'Amenity': Amenity,
-               'Review': Review
-              }
+            'BaseModel': BaseModel, 'User': User, 'Place': Place,
+            'State': State, 'City': City, 'Amenity': Amenity,
+            'Review': Review
+            }
     dot_cmds = ['all', 'count', 'show', 'destroy', 'update']
     types = {
-             'number_rooms': int, 'number_bathrooms': int,
-             'max_guest': int, 'price_by_night': int,
-             'latitude': float, 'longitude': float
+            'number_rooms': int, 'number_bathrooms': int,
+            'max_guest': int, 'price_by_night': int,
+            'latitude': float, 'longitude': float
             }
 
     def preloop(self):
@@ -75,7 +78,7 @@ class HBNBCommand(cmd.Cmd):
                     # check for *args or **kwargs
                     if pline[0] is '{' and pline[-1] is'}'\
                             and type(eval(pline)) is dict:
-                        _args = pline
+                                _args = pline
                     else:
                         _args = pline.replace(',', '')
                         # _args = _args.replace('\"', '')
@@ -115,37 +118,67 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
-        if not args:
-            print("** class name missing **")
+        cls_name = ''
+        cls_name_pat = r'(?P<cls_name>(?:[a-zA-Z]|_)(?:[a-zA-Z]|\d|_)*)'
+        ignore_atr = ('id', 'created_at', 'updated_at', 'class')
+        cls_match = re.match(cls_name_pat, args)
+        obj_kwargs = {}
+        if cls_match is not None:
+            cls_name = cls_match.group('cls_name')
+            params_str = args[len(cls_name):].strip()
+            params = params_str.split(' ')
+            str_pat = r'(?P<str_val>"([^"]|\")*")'
+            float_pat = r'(?P<float_val>[-+]?\d+\.\d+)'
+            int_pat = r'(?P<int_val>[-+]?\d+)'
+            param_pat = '{}=({}|{}|{})'.format(
+                cls_name_pat,
+                str_pat,
+                float_pat,
+                int_pat
+            )
+            for param in params:
+                param_match = re.fullmatch(param_pat, param)
+                if param_match is not None:
+                    key_name = param_match.group('cls_name')
+                    str_val = param_match.group('str_val')
+                    float_val = param_match.group('float_val')
+                    int_val = param_match.group('int_val')
+                    if float_val is not None:
+                        obj_kwargs[key_name] = float(float_val)
+                    if str_val is not None:
+                        obj_kwargs[key_name] = str_val[1:-1].replace('_', ' ')
+                    if int_val is not None:
+                        obj_kwargs[key_name] = int(int_val)
+        else:
+            cls_name = args
+        if not cls_name:
+            print(" class name missing ")
             return
-
-        args_list = args.split()
-        command = args_list[0]
-        elif command not in HBNBCommand.classes:
-            print("** class doesn't exist **")
+        elif cls_name not in HBNBCommand.classes:
+            print(" class doesn't exist ")
             return
+        if os.getenv('HBNB_TYPE_STORAGE') == 'db':
+            if 'id' not in obj_kwargs:
+                obj_kwargs['id'] = str(uuid.uuid4())
+            if 'created_at' not in obj_kwargs:
+                obj_kwargs['created_at'] = str(datetime.now())
+            if 'updated_at' not in obj_kwargs:
+                obj_kwargs['updated_at'] = str(datetime.now())
+            new_instance = HBNBCommand.classes[cls_name](**obj_kwargs)
+            new_instance.save()
+            print(new_instance.id)
+        else:
+            new_instance = HBNBCommand.classes[cls_name]()
+            for key, value in obj_kwargs.items():
+                if key not in ignore_atr:
+                    setattr(new_instance, key, value)
+            new_instance.save()
+            print(new_instance.id)
 
-        parm_dict = {}
-        for arg in args_list[1:]:
-            match = re.match(r'(\w+)="(.*)"', arg)
-            if match:
-                key, value = match.groups()
-                value = value.replace('_', ' ')
-                value = value.replace('\\"', '"')
-                parm_dict[key] = value
-            elif re.match(r'^\d+$', arg):
-                parm_dict[len(parm_dict)] = int(arg)
-            elif re.match(r'^\d+\.\d+$', arg):
-                parm_dict[len(parm_dict)] = float(arg)
 
-        new_instance = HBNBCommand.classes[command](**parm_dict)
         storage.save()
         print(new_instance.id)
-
-    def help_create(self):
-        """ Help information for the create method """
-        print("Creates a class of any type")
-        print("[Usage]: create <className>\n")
+        storage.save()
 
     def do_show(self, args):
         """ Method to show an individual object """
