@@ -56,7 +56,7 @@ class test_fileStorage(unittest.TestCase):
 
     def test_save(self):
         """ FileStorage save method """
-        new = BaseModel(name="My_house", age=20)
+        new = BaseModel()
         storage.save()
         self.assertTrue(os.path.exists('file.json'))
 

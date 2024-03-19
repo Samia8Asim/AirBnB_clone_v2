@@ -3,44 +3,48 @@
 import unittest
 from unittest.mock import patch
 from console import HBNBCommand
-from models import State, Place
+import os
+from models import storage
+from models.city import City
+from models.user import User
+from io import StringIO
 
 
-class TestConsoleCreate(unittest.TestCase):
-    @patch('sys.stdout', new_callable=io.StringIO)
-    def test_create_state(self, mock_stdout):
-        HBNBCommand().onecmd("create State name=\"California\"")
-        output = mock_stdout.getvalue().strip()
-        self.assertTrue(len(output) == 36)
+class TestHBNBCommand(unittest.TestCase):
+    @unittest.skipIf(
+            os.getenv('HBNB_TYPE_STORAGE') != 'db', 'DBStorage test')
+    def test_db_create_city(self):
+        """Test creating a City instance with DBStorage."""
+        with patch('sys.stdout', new=StringIO()) as cout:
+            HBNBCommand().onecmd('create City name="Paris" state_id="123"')
+            output = cout.getvalue().strip()
+            self.assertTrue(len(output) == 36)
 
-        state_id = output
-        state = storage.all()['State.{}'.format(state_id)]
-        self.assertIsInstance(state, State)
-        self.assertEqual(state.name, "California")
+            city_id = output
+            city = storage.get(City, city_id)
 
-    def test_create_place(self, mock_stdout):
-        HBNBCommand().onecmd(
-                "create Place city_id=\"0001\" user_id=\"0001\" name=\"My_\
-                little_house\" number_rooms=4number_bathrooms=2\
-                max_guest=10 price_by_night=300 latitude=37.773972\
-                longitude=-122.431297"
-        )
-        output = mock_stdout.getvalue().strip()
-        self.assertTrue(len(output) == 36)
+            self.assertIsInstance(city, City)
+            self.assertEqual(city.name, "Paris")
+            self.assertEqual(city.state_id, "123")
 
-        place_id = output
-        place = storage.all()['Place.{}'.format(place_id)]
+    @unittest.skipIf(
+            os.getenv('HBNB_TYPE_STORAGE') != 'db', 'DBStorage test')
+    def test_db_create_user(self):
+        """Test creating a User instance with DBStorage."""
+        with patch('sys.stdout', new=StringIO()) as cout:
+            HBNBCommand().onecmd(
+                    'create User email="test@example.com"\
+                    password="password123"'
+            )
+            output = cout.getvalue().strip()
+            self.assertTrue(len(output) == 36)
 
-        self.assertIsInstance(place, Place)
-        self.assertEqual(place.city_id, "0001")
-        self.assertEqual(place.user_id, "0001")
-        self.assertEqual(place.name, "My little house")
-        self.assertEqual(place.number_rooms, 4)
-        self.assertEqual(place.number_bathrooms, 2)
-        self.assertEqual(place.max_guest, 10)
-        self.assertEqual(place.price_by_night, 300)
-        self.assertEqual(place.latitude, 37.773972)
-        self.assertEqual(place.longitude, -122.431297)
+            user_id = output
+            user = storage.get(User, user_id)
+
+            self.assertIsInstance(user, User)
+            self.assertEqual(user.email, "test@example.com")
+            self.assertEqual(user.password, "password123")
 
 
 if __name__ == '__main__':
