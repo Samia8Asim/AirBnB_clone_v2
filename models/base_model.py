@@ -3,8 +3,8 @@
 import uuid
 import os
 from datetime import datetime
-from models import storage
-from sqlalchemy import Column, String, DATETIME
+import models
+from sqlalchemy import Column, String, DateTime, Integer
 from sqlalchemy.ext.declarative import declarative_base
 
 
@@ -22,7 +22,7 @@ class BaseModel:
             self.id = str(uuid.uuid4())
             self.created_at = datetime.utcnow()
             self.updated_at = datetime.utcnow()
-            storage.new(self)
+            models.storage.new(self)
         else:
             for key, value in kwargs.items():
                 if key != '__class__':
@@ -43,8 +43,8 @@ class BaseModel:
     def save(self):
         """Updates updated_at with current time when instance is changed"""
         self.updated_at = datetime.utcnow()
-        storage.new(self)
-        storage.save()
+        models.storage.new(self)
+        models.storage.save()
 
     def to_dict(self):
         """Convert instance into dict format"""
@@ -57,4 +57,4 @@ class BaseModel:
 
     def delete(self):
         """Deletes BaseModel instance from the storage"""
-        storage.delete(self)
+        models.storage.delete(self)

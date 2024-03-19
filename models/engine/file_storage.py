@@ -16,7 +16,7 @@ class FileStorage:
             cls_obj = {}
             for key, value in FileStorage.__objects.items():
                 if key.split('.')[0] == cls.__name__:
-                    cls_obj[key] = vlaue
+                    cls_obj[key] = value
             return cls_obj
 
     def new(self, obj):
