@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """This module defines base class for all models in our hbnb clone"""
 import uuid
+import os
 from datetime import datetime
 import models
 from sqlalchemy import Column, String, DateTime, Integer
