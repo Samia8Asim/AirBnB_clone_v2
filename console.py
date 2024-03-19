@@ -118,37 +118,34 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
-        if not args:
-            print("** class name missing **")
-            return
+        try:
+            if not args:
+                raise SyntaxError()
+            args_split = args.split(" ")
 
-        arg_list = args.split()
-        class_name = arg_list[0]
-        if class_name not in HBNBCommand.classes:
-            print("** class doesn't exist **")
-            return
-        params = {}
-        for param in arg_list[1:]:
-            param_split = param.split('=')
-            key = param_split[0]
-            value = param_split[1]
-
-            if '"' in value:
-                value = value.replace('_', ' ')
-            if '"' in value and value.count('"') == 2:
-                value = value.replace('\\"', '"')[1:-1]
-            elif '.' in value:
-                value = float(value)
+            kw = {}
+            for i in range(1, len(args_split)):
+                key, value = tuple(args_split[i].split("="))
+                if value[0] == '"':
+                    value = value.strip('"').replace("_", " ")
+                else:
+                    try:
+                        value = eval(value)
+                    except (SyntaxError, NameError):
+                        continue
+                kw[key] = value
+            if kw == {}:
+                obj = eval(args_split[0])()
             else:
-                try:
-                    value = int(value)
-                except ValueError:
-                    pass
-            params[key] = value
+                obj = eval(args_split[0])(**kw)
+                storage.new(obj)
+            print(obj.id)
+            obj.save()
 
-            new_instance = HBNBCommand.classes[class_name](**params)
-            new_instance.save()
-            print(new_instance.id)
+        except SyntaxError:
+            print("** class name missing **")
+        except NameError:
+            print("** class doesn't exist **")
 
     def do_show(self, args):
         """ Method to show an individual object """
