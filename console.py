@@ -137,11 +137,11 @@ class HBNBCommand(cmd.Cmd):
             if kw == {}:
                 obj = eval(args_split[0])()
             else:
-                obj = eval(args_split[0])(**kw)
+                obj = eval(args_split[0])(kw)
 
             storage.new(obj)
+            print(obj.id)
             obj.save()
-            print(f"[{type(obj).__name__}] ({obj.id}) {obj.__dict__}")
 
         except SyntaxError:
             print(" class name missing ")
