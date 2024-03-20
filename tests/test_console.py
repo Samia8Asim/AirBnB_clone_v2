@@ -13,16 +13,16 @@ from io import StringIO
 class TestConsole(unittest.TestCase):
     """test console mosule"""
     @classmethod
-    def setUpClass(cls):
+    def setUpCls(cls):
         """Setup the test"""
         cls.console_instance = HBNBCommand()
 
     @classmethod
-    def tearDownClass(cls):
+    def tearDownCls(cls):
         """Tear down after the test"""
         del cls.console_instance
 
-    def tearDown(self):
+    def tDown(self):
         """Remove the temp (file.json) created during the test"""
         if (os.getenv('HBNB_TYPE_STORAGE') != 'db'):
             try:
