@@ -138,7 +138,7 @@ class HBNBCommand(cmd.Cmd):
                 obj = eval(args_split[0])()
             else:
                 obj = eval(args_split[0])(**kw)
-            storage.new(obj)
+                storage.new(obj)
             print(obj.id)
             obj.save()
 
