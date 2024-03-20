@@ -116,41 +116,36 @@ class HBNBCommand(cmd.Cmd):
         """ Overrides the emptyline method of CMD """
         pass
 
-    def do_create(self, arg):
-        """Create an object of any class with parameters"""
+    def do_create(self, args):
+        """ Create an object of any class"""
         try:
-            if not arg:
-                raise SyntaxError("class name missing")
-
-            args_split = arg.split(" ")
-            class_name = args_split[0]
-            params = args_split[1:]
-
-            if not params:
-                raise SyntaxError("parameters missing")
+            if not args:
+                raise SyntaxError()
+            args_split = args.split(" ")
 
             kw = {}
-            for param in params:
-                key, value = tuple(param.split("="))
-                if value.startswith('"') and value.endswith('"'):
-                    value = value[1:-1].replace("_", " ")
-                elif "." in value:
-                    value = float(value)
+            for i in range(1, len(args_split)):
+                key, value = tuple(args_split[i].split("="))
+                if value[0] == '"':
+                    value = value.strip('"').replace("_", " ")
                 else:
                     try:
-                        value = int(value)
-                    except ValueError:
+                        value = eval(value)
+                    except (SyntaxError, NameError):
                         continue
                 kw[key] = value
-
-            obj = eval(class_name)(**kw)
+            if kw == {}:
+                obj = eval(args_split[0])()
+            else:
+                obj = eval(args_split[0])(kw)
             storage.new(obj)
-            storage.save()
             print(obj.id)
-        except SyntaxError as e:
-            print(e)
+            obj.save()
+
+        except SyntaxError:
+            print(" class name missing ")
         except NameError:
-            print("class doesn't exist")
+            print(" class doesn't exist **")
 
     def do_show(self, args):
         """ Method to show an individual object """
