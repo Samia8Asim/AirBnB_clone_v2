@@ -36,10 +36,11 @@ class BaseModel:
 
             self.dict.update(kwargs)
 
-    def str(self):
+    def __str__(self):
         """Returns a string representation of the instance"""
-        cls_name = self.class.name
-        return '[{}] ({}) {}'.format(cls_name, self.id, self.dict)
+        cls_dict = self.__dic__.copy()
+        cls_dict.pop("_sa_instance_state", None)
+        return '[{}] ({}) {}'.format(type(self).__name__, self.id, cls_dict)
 
     def save(self):
         """Updates updated_at with current time when instance is changed"""
@@ -50,8 +51,8 @@ class BaseModel:
 
     def to_dict(self):
         """Convert instance into dict format"""
-        dictionary = dict(self.dict)
-        dictionary['class'] = self.class.name
+        dictionary = self.__dict__.copy()
+        dictionary['class'] = str(type(self).__name__)
         dictionary['created_at'] = self.created_at.isoformat()
         dictionary['updated_at'] = self.updated_at.isoformat()
         dictionary.pop('_sa_instance_state', None)
