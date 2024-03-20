@@ -118,62 +118,34 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
-        ignore_attrs = ('id', 'created_at', 'updated_at', 'class')
-        cls_name = ''
-        cls_name_pat = r'(?P<cls_name>(?:[a-zA-Z]|_)(?:[a-zA-Z]|\d|_)*)'
-        cls_match = re.match(cls_name_pat, args)
-        obj_kwargs = {}
-        if cls_match is not None:
-            cls_name = cls_match.group('cls_name')
-            params_str = args[len(cls_name):].strip()
-            params = params_str.split(' ')
-            str_pat = r'(?P<str_val>"([^"]|\")*")'
-            float_pat = r'(?P<float_val>[-+]?\d+\.\d+)'
-            int_pat = r'(?P<int_val>[-+]?\d+)'
-            param_pat = '{}=({}|{}|{})'.format(
-                cls_name_pat,
-                str_pat,
-                float_pat,
-                int_pat
-            )
-            for param in params:
-                param_match = re.fullmatch(param_pat, param)
-                if param_match is not None:
-                    key_name = param_match.group('cls_name')
-                    str_val = param_match.group('str_val')
-                    float_val = param_match.group('float_val')
-                    int_val = param_match.group('int_val')
-                    if float_val is not None:
-                        obj_kwargs[key_name] = float(float_val)
-                    if int_val is not None:
-                        obj_kwargs[key_name] = int(int_val)
-                    if str_val is not None:
-                        obj_kwargs[key_name] = str_val[1:-1].replace('_', ' ')
-        else:
-            cls_name = args
-        if not cls_name:
+        try:
+            if not args:
+                raise SyntaxError()
+            args_split = args.split(" ")
+
+            kw = {}
+            for i in range(1, len(args_split)):
+                key, value = tuple(args_split[i].split("="))
+                if value[0] == '"':
+                    value = value.strip('"').replace("_", " ")
+                else:
+                    try:
+                        value = eval(value)
+                    except (SyntaxError, NameError):
+                        continue
+                kw[key] = value
+            if kw == {}:
+                obj = eval(args_split[0])()
+            else:
+                obj = eval(args_split[0])(kw)
+            storage.new(obj)
+            print(obj.id)
+            obj.save()
+
+        except SyntaxError:
             print(" class name missing ")
-            return
-        elif cls_name not in HBNBCommand.classes:
-            print(" class doesn't exist ")
-            return
-        if os.getenv('HBNB_TYPE_STORAGE') == 'db':
-            if 'id' not in obj_kwargs:
-                obj_kwargs['id'] = str(uuid.uuid4())
-            if 'created_at' not in obj_kwargs:
-                obj_kwargs['created_at'] = str(datetime.now())
-            if 'updated_at' not in obj_kwargs:
-                obj_kwargs['updated_at'] = str(datetime.now())
-            new_instance = HBNBCommand.classes[cls_name](**obj_kwargs)
-            new_instance.save()
-            print(new_instance.id)
-        else:
-            new_instance = HBNBCommand.classes[cls_name]()
-            for key, value in obj_kwargs.items():
-                if key not in ignore_attrs:
-                    setattr(new_instance, key, value)
-            new_instance.save()
-            print(new_instance.id)
+        except NameError:
+            print(" class doesn't exist **")
 
     def do_show(self, args):
         """ Method to show an individual object """
