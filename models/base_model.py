@@ -26,21 +26,13 @@ class BaseModel:
             for key, value in kwargs.items():
                 if key != 'class':
                     setattr(self, key, value)
-            if 'id' not in kwargs:
-                self.id = str(uuid.uuid4())
-            else:
-                self.id = kwargs['id']
             if 'created_at' in kwargs:
                 kwargs['created_at'] = datetime.strptime(kwargs['created_at'],
                                                          '%Y-%m-%dT%H:%M:%S.%f')
-            else:
-                kwargs['created_at'] = datetime.now()
 
             if 'updated_at' in kwargs:
                 kwargs['updated_at'] = datetime.strptime(kwargs['updated_at'],
                                                          '%Y-%m-%dT%H:%M:%S.%f')
-            else:
-                kwargs['updated_at'] = datetime.now()
 
             self.dict.update(kwargs)
 
