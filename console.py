@@ -78,7 +78,7 @@ class HBNBCommand(cmd.Cmd):
                     # check for *args or **kwargs
                     if pline[0] == '{' and pline[-1] == '}'\
                             and type(eval(pline)) is dict:
-                            _args = pline
+                        _args = pline
                     else:
                         _args = pline.replace(',', '')
                         # _args = _args.replace('\"', '')
@@ -220,7 +220,8 @@ class HBNBCommand(cmd.Cmd):
         if not args:
             print([str(obj) for obj in storage.all().values()])
         elif args[0] in self.classes:
-            print([str(obj) for obj in storage.all(self.classes[args[0]]).values()])
+            print([str(obj) for obj in storage.all(
+                  self.classes[args[0]]).values()])
         else:
             print("** class doesn't exist **")
 
